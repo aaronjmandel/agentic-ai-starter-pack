@@ -1,0 +1,6 @@
+{
+  "enableAllProjectMcpServers": true,
+  "disabledMcpjsonServers": [
+    "palantir-mcp"
+  ]
+}

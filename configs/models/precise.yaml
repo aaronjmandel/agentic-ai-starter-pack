@@ -1,4 +1,0 @@
-# Low-temperature config for deterministic outputs (code gen, extraction)
-model: claude-sonnet-4-20250514
-max_tokens: 4096
-temperature: 0.0

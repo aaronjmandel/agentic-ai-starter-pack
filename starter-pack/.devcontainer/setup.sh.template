@@ -1,0 +1,76 @@
+#!/bin/bash
+set -e
+
+# Source ONA-injected secrets (available in /etc/environment)
+set -a
+source /etc/environment 2>/dev/null || true
+set +a
+
+# Persist Claude Code sessions across container rebuilds
+mkdir -p /workspaces/.claude-data
+if [ ! -L "$HOME/.claude" ]; then
+  rm -rf "$HOME/.claude"
+  ln -s /workspaces/.claude-data "$HOME/.claude"
+fi
+
+# ─── Node.js ────────────────────────────────────────────────────────
+# [REPLACE] Remove this section if your project doesn't need Node.js.
+# Required for: TypeScript projects, palantir-mcp (runs via npx)
+curl -fsSL https://nodejs.org/dist/v22.14.0/node-v22.14.0-linux-x64.tar.xz | tar -xJ -C /tmp
+sudo cp -r /tmp/node-v22.14.0-linux-x64/bin/* /usr/local/bin/
+sudo cp -r /tmp/node-v22.14.0-linux-x64/lib /usr/local/
+node --version
+
+# ─── Python ─────────────────────────────────────────────────────────
+# [REPLACE] Remove this section if your project doesn't need Python.
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+uv python install 3.12
+UV_PYTHON_BIN=$(uv python find 3.12)
+sudo ln -sf "$UV_PYTHON_BIN" /usr/local/bin/python3
+sudo ln -sf /usr/local/bin/python3 /usr/local/bin/python
+/usr/local/bin/python3 --version
+
+# ─── Git CLI tools ──────────────────────────────────────────────────
+# [REPLACE] Install only the CLI you need: gh (GitHub) or glab (GitLab)
+
+# GitHub CLI
+curl -fsSL https://github.com/cli/cli/releases/download/v2.67.0/gh_2.67.0_linux_amd64.tar.gz | tar -xz -C /tmp
+sudo install /tmp/gh_2.67.0_linux_amd64/bin/gh /usr/local/bin/gh
+gh --version
+
+# GitLab CLI
+# curl -fsSL https://gitlab.com/gitlab-org/cli/-/releases/v1.52.0/downloads/glab_1.52.0_linux_amd64.tar.gz | tar -xz -C /tmp
+# sudo install /tmp/bin/glab /usr/local/bin/glab
+# glab --version
+# glab config set host [YOUR_GITLAB_HOST]
+
+# ─── Claude Code alias ──────────────────────────────────────────────
+# [OPTIONAL] Default claude to use Opus model
+# if ! grep -q 'alias claude=' "$HOME/.bashrc" 2>/dev/null; then
+#   echo 'alias claude="claude --model claude-opus-4-6"' >> "$HOME/.bashrc"
+# fi
+
+# ─── Validate secrets ───────────────────────────────────────────────
+# [REPLACE] Update these checks for the secrets your project needs.
+if [ -z "${GITHUB_TOKEN:-}" ] && [ -z "${GITLAB_TOKEN:-}" ]; then
+  echo ""
+  echo "WARNING: No VCS token found (GITHUB_TOKEN or GITLAB_TOKEN)."
+  echo "  PR/MR operations will not be authenticated."
+  echo "  Add the appropriate token as an ONA secret."
+  echo ""
+fi
+
+if [ -z "${ATLASSIAN_TOKEN:-}" ]; then
+  echo ""
+  echo "WARNING: ATLASSIAN_TOKEN is not set."
+  echo "  Jira integration (jira-integration skill) will not work."
+  echo "  Add ATLASSIAN_TOKEN, ATLASSIAN_EMAIL, and ATLASSIAN_DOMAIN as ONA secrets."
+  echo ""
+fi
+
+# ─── Additional setup ───────────────────────────────────────────────
+# [REPLACE] Add project-specific setup here:
+# - Clone additional repos
+# - Install project dependencies
+# - Configure git credentials for internal registries
