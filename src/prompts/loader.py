@@ -1,4 +1,10 @@
-"""Prompt template loader using Jinja2."""
+"""Prompt template loader using Jinja2.
+
+Claude uses the system prompt as a top-level API parameter (not a message
+role). These templates are used to compose system prompts with dynamic
+context — tool descriptions are handled natively by the API and don't
+need to be injected into the prompt.
+"""
 
 from pathlib import Path
 from typing import Any

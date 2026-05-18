@@ -1,30 +1,28 @@
 # Integrations
 
-## LLM Providers
+## Claude Models
 
-### OpenAI
-Set `OPENAI_API_KEY` in `.env`. See `examples/simple_agent.py`.
+Set `ANTHROPIC_API_KEY` in `.env`. The starter pack defaults to `claude-sonnet-4-20250514`.
 
-### Anthropic
-Set `ANTHROPIC_API_KEY` in `.env`. Override `_call_llm()` using the `anthropic` package:
+Available model configs in `configs/models/`:
+- `default.yaml` — balanced (temperature 0.7)
+- `precise.yaml` — deterministic (temperature 0)
+- `creative.yaml` — exploratory (temperature 1.0)
+- `thinking.yaml` — extended thinking enabled (budget: 10k tokens)
+
+## Extended Thinking
+
+Claude can reason internally before responding. Enable via config:
 
 ```python
-from anthropic import AsyncAnthropic
-
-client = AsyncAnthropic()
-message = await client.messages.create(
-    model="claude-sonnet-4-20250514",
-    max_tokens=4096,
-    messages=self._history,
+config = AgentConfig(
+    name="thinker",
+    max_tokens=16000,
+    thinking={"type": "enabled", "budget_tokens": 10000},
 )
 ```
 
-### Local Models (Ollama, vLLM)
-Point the OpenAI client at a local endpoint:
-
-```python
-client = AsyncOpenAI(base_url="http://localhost:11434/v1", api_key="unused")
-```
+The thinking output is captured in `AgentResponse.thinking` for debugging.
 
 ## Search APIs
 

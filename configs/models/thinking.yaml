@@ -1,0 +1,8 @@
+# Extended thinking config for complex reasoning tasks.
+# Uses Claude's extended thinking feature — budget_tokens controls
+# how many tokens Claude can use for internal reasoning before responding.
+model: claude-sonnet-4-20250514
+max_tokens: 16000
+thinking:
+  type: enabled
+  budget_tokens: 10000

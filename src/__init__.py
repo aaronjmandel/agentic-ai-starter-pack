@@ -1,1 +1,1 @@
-"""Agentic AI Starter Pack — prototyping scaffold for agentic systems."""
+"""Agentic AI Starter Pack — Claude-native prototyping scaffold."""

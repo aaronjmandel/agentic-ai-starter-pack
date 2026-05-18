@@ -42,7 +42,19 @@ class CalculatorTool(BaseTool):
 
     @property
     def description(self) -> str:
-        return "Evaluate a mathematical expression. Supports +, -, *, /, **, %. Input: 'expression' string."
+        return "Evaluate a mathematical expression. Supports +, -, *, /, **, %."
+
+    def input_schema(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "expression": {
+                    "type": "string",
+                    "description": "Arithmetic expression to evaluate, e.g. '(2 + 3) * 4'",
+                }
+            },
+            "required": ["expression"],
+        }
 
     async def execute(self, **kwargs: Any) -> str:
         expression = kwargs.get("expression", "")
@@ -54,15 +66,3 @@ class CalculatorTool(BaseTool):
             return str(result)
         except (ValueError, SyntaxError, ZeroDivisionError) as e:
             return f"Error: {e}"
-
-    def _parameters_schema(self) -> dict[str, Any]:
-        return {
-            "type": "object",
-            "properties": {
-                "expression": {
-                    "type": "string",
-                    "description": "Arithmetic expression to evaluate, e.g. '(2 + 3) * 4'",
-                }
-            },
-            "required": ["expression"],
-        }

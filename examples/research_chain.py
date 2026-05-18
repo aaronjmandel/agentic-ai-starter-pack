@@ -3,33 +3,23 @@
 Usage:
     python examples/research_chain.py
 
+Requires ANTHROPIC_API_KEY in .env or environment.
+
 Demonstrates a multi-step chain: search → synthesize → summarize.
+Each step uses Claude's native tool use.
 """
 
 import asyncio
-import os
 
 from dotenv import load_dotenv
 
-from src.agents.base import AgentConfig
 from src.chains.research_chain import ResearchChain
 
 load_dotenv()
 
 
-# Reuse the SimpleAgent from the other example
-from examples.simple_agent import SimpleAgent
-
-
 async def main() -> None:
-    config = AgentConfig(
-        name="researcher",
-        model="gpt-4o",
-        system_prompt="You are a research analyst. Provide structured, factual analysis.",
-    )
-
-    agent = SimpleAgent(config)
-    chain = ResearchChain(agent)
+    chain = ResearchChain()
 
     result = await chain.run({
         "topic": "Recent advances in agentic AI systems",

@@ -1,4 +1,9 @@
-"""Base tool interface that all tools must implement."""
+"""Base tool interface for Claude's native tool use.
+
+Tools are defined using Anthropic's tool schema format with `input_schema`
+(JSON Schema). The schema is passed directly to Claude's `tools` parameter
+in the Messages API.
+"""
 
 from abc import ABC, abstractmethod
 from typing import Any
@@ -7,9 +12,9 @@ from typing import Any
 class BaseTool(ABC):
     """Abstract base for agent tools.
 
-    The `name` and `description` are passed to the LLM so it knows
-    what the tool does and when to use it. Keep descriptions precise
-    and action-oriented.
+    Subclasses define `name`, `description`, and `input_schema` which are
+    sent to Claude as-is. The `execute()` method runs when Claude emits
+    a `tool_use` content block.
     """
 
     @property
@@ -21,7 +26,16 @@ class BaseTool(ABC):
     @property
     @abstractmethod
     def description(self) -> str:
-        """One-line description of what the tool does. Sent to the LLM."""
+        """One-line description of what the tool does. Sent directly to Claude."""
+        ...
+
+    @abstractmethod
+    def input_schema(self) -> dict[str, Any]:
+        """JSON Schema for the tool's input parameters.
+
+        Returns a dict matching Anthropic's `input_schema` format:
+        {"type": "object", "properties": {...}, "required": [...]}
+        """
         ...
 
     @abstractmethod
@@ -29,27 +43,21 @@ class BaseTool(ABC):
         """Run the tool with the given arguments and return a string result.
 
         Args:
-            **kwargs: Tool-specific arguments.
+            **kwargs: Tool-specific arguments matching the input_schema.
 
         Returns:
-            String result to be fed back to the agent as an observation.
+            String result fed back to Claude as a tool_result content block.
         """
         ...
 
-    def to_schema(self) -> dict[str, Any]:
-        """Return a JSON-schema-style description for function calling APIs."""
-        return {
-            "type": "function",
-            "function": {
-                "name": self.name,
-                "description": self.description,
-                "parameters": self._parameters_schema(),
-            },
-        }
+    def to_anthropic_schema(self) -> dict[str, Any]:
+        """Return the tool definition in Anthropic's Messages API format.
 
-    def _parameters_schema(self) -> dict[str, Any]:
-        """Override to provide parameter schema for function calling.
-
-        Default returns an empty object schema.
+        This dict is passed directly to the `tools` parameter of
+        `client.messages.create()`.
         """
-        return {"type": "object", "properties": {}, "required": []}
+        return {
+            "name": self.name,
+            "description": self.description,
+            "input_schema": self.input_schema(),
+        }

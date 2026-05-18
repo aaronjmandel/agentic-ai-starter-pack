@@ -3,7 +3,6 @@
 Usage:
     python examples/evaluation_demo.py
 
-Demonstrates how to set up metrics and score agent outputs.
 No API key required — uses static test data.
 """
 

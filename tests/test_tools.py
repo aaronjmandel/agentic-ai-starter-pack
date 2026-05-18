@@ -47,10 +47,11 @@ class TestCalculatorTool:
         result = await calculator.execute(expression="import os")
         assert "Error" in result
 
-    def test_schema(self, calculator: CalculatorTool) -> None:
-        schema = calculator.to_schema()
-        assert schema["function"]["name"] == "calculator"
-        assert "expression" in schema["function"]["parameters"]["properties"]
+    def test_anthropic_schema(self, calculator: CalculatorTool) -> None:
+        schema = calculator.to_anthropic_schema()
+        assert schema["name"] == "calculator"
+        assert "input_schema" in schema
+        assert "expression" in schema["input_schema"]["properties"]
 
 
 class TestWebSearchTool:
@@ -62,10 +63,14 @@ class TestWebSearchTool:
         result = await web_search.execute(query="")
         assert "Error" in result
 
+    def test_anthropic_schema(self, web_search: WebSearchTool) -> None:
+        schema = web_search.to_anthropic_schema()
+        assert schema["name"] == "web_search"
+        assert "query" in schema["input_schema"]["properties"]
+
 
 class TestFileReaderTool:
     async def test_read_existing_file(self, file_reader: FileReaderTool, tmp_path: pytest.TempPathFactory) -> None:
-        # tmp_path is a pathlib.Path from pytest
         test_file = tmp_path / "test.txt"  # type: ignore[operator]
         test_file.write_text("hello world")
         result = await file_reader.execute(path=str(test_file))

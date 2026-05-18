@@ -1,5 +1,0 @@
-name: react_system
-description: System prompt for ReAct-style agents with tool use
-required_variables:
-  - system_prompt  # Base system prompt for the agent's persona
-  - tools          # List of {name, description} dicts for available tools

@@ -1,53 +1,37 @@
-"""Example: Run a simple ReAct agent with tools.
+"""Example: Run a Claude tool-use agent.
 
 Usage:
     python examples/simple_agent.py
 
-Requires OPENAI_API_KEY in .env or environment.
+Requires ANTHROPIC_API_KEY in .env or environment.
+
+Demonstrates Claude's native agentic loop:
+- Define tools with input_schema
+- Claude decides when and how to call them
+- Tool results are fed back as tool_result content blocks
+- Loop continues until Claude responds with end_turn
 """
 
 import asyncio
-import os
 
 from dotenv import load_dotenv
 
 from src.agents.base import AgentConfig
-from src.agents.react_agent import ReActAgent
+from src.agents.tool_use_agent import ToolUseAgent
 from src.tools.calculator import CalculatorTool
 from src.tools.web_search import WebSearchTool
 
 load_dotenv()
 
 
-class SimpleAgent(ReActAgent):
-    """ReAct agent wired to OpenAI's chat completions API."""
-
-    async def _call_llm(self) -> str:
-        """Call OpenAI with the current message history."""
-        try:
-            from openai import AsyncOpenAI
-        except ImportError:
-            raise ImportError("Install openai: pip install openai")
-
-        client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        response = await client.chat.completions.create(
-            model=self.config.model,
-            messages=self._history,  # type: ignore[arg-type]
-            temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens,
-        )
-        return response.choices[0].message.content or ""
-
-
 async def main() -> None:
     config = AgentConfig(
         name="simple-agent",
-        model="gpt-4o",
         system_prompt="You are a helpful assistant that can search the web and do math.",
     )
 
     tools = [WebSearchTool(), CalculatorTool()]
-    agent = SimpleAgent(config, tools)
+    agent = ToolUseAgent(config, tools)
 
     question = "What is 42 * 17 + 3?"
     print(f"Question: {question}")
@@ -56,6 +40,8 @@ async def main() -> None:
     print(f"Answer: {result.output}")
     print(f"Iterations: {result.iterations}")
     print(f"Tool calls: {len(result.tool_calls)}")
+    if result.usage:
+        print(f"Tokens: {result.usage}")
 
 
 if __name__ == "__main__":
