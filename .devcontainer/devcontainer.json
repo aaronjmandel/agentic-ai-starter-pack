@@ -4,7 +4,7 @@
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
-	"postCreateCommand": "pip install -e '.[dev]'",
+	"postCreateCommand": "bash .devcontainer/setup-ssh.sh && pip install -e '.[dev]'",
 	"customizations": {
 		"vscode": {
 			"extensions": [
