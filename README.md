@@ -28,9 +28,10 @@ The following detailed section will walk you through the setup of gitlab, ona, a
 
 In a browser log into the [ONA environment](https://flexdev.roche.com/)
 Once authenticated, we need an environment where we can run some commands. Create New Environment, create a small environment, and get a cup of tea because the system will take a couple minutes to provision a virtual machine where you will be doing development work.
-![Create an ONA Env](/videos/CreateEnvInONA.gif)
+![Create an ONA Env](./videos/CreateEnvInONA.gif)
 
-Once the ONA environment has been initialized, we will be working with it through a local Integrated Development Environment (IDE) - VSCode. This will offer performance advantages, the ability to connect to multiple concurrent repositories, and other advantages. ![Connect to VS Code](./videos/ConnectToVsCode.gif)
+Once the ONA environment has been initialized, we will be working with it through a local Integrated Development Environment (IDE) - VSCode. This will offer performance advantages, the ability to connect to multiple concurrent repositories, and other advantages.
+![Connect to VS Code](./videos/ConnectToVsCode.gif)
 
 ### Create a keypair in ONA
 
@@ -38,7 +39,7 @@ When the ONA machine starts, we'll write the following command in the terminal c
 ```bash
 ssh-keygen -t ed25519 -C "your_email@gene.com"
 ```
-![We can now run commands on the remote ONA machine](/images/terminalRemoteSSH.jpg)
+![We can now run commands on the remote ONA machine](./images/terminalRemoteSSH.jpg)
 
 This will create a private/public key pair for your user account on the remote machine.  Now we want to copy the public key because we will push that to gitlab. In the future, when the ONA machine talks to the gitlab server, the two machines will verify authenticity through the public/private cryptograhic keys.
 
@@ -56,14 +57,14 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGBkwQ2WvjpcYjOsNnxcR4F8cgp1h7+16QndSSc57Vh3
 In a browser, log in to to https://code.roche.com
 in the upper right click on your user icon > preferences
 In your gitlab user preferences menu, go to SSH keys and we're going to "add a new key".
-![Load your public key in git](videos/LoadPubKeyInGit.gif)
+![Load your public key in git](./videos/LoadPubKeyInGit.gif)
 
 ### While in gitlab create a private repo to store ONA config changes
 
 Now to consistently edit your ona setup we need to leverage a gitlab repository where we store the instructions.
 on code.roche.com we will create a new repository.
 Put the new project in your local space and give it a name to indicate ona configuration.
-![Create a new repo file in gitlab](/images/createNewGitlabRepo.jpg)
+![Create a new repo file in gitlab](./images/createNewGitlabRepo.jpg)
 In the terminal of the Ona machine let's configure git to connect to the remote repository:
 
 ```bash
@@ -76,7 +77,7 @@ git commit -m "add ONA configuration files to personal ona config repo"
 ```
 
 Look in gitlab and you'll be able to confirm the commit worked.
-![confirm git command worked](/images/successfulGitCommit.jpg)
+![confirm git command worked](./images/successfulGitCommit.jpg)
 
 ### Finally, in ONA we need to persist the private key
 
