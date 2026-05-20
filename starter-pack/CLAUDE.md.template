@@ -1,0 +1,149 @@
+# [PROJECT_NAME]
+
+[PROJECT_DESCRIPTION — one paragraph describing what this system does, who uses it, and why it exists.]
+
+## Build Commands
+
+```bash
+# [REPLACE with your actual build/test/lint commands]
+# Example for a TypeScript project:
+cd src/
+npm install
+npm run build          # Compile
+npm run typecheck      # Type-check without emit
+npm run lint           # Lint
+npm test               # Run tests
+
+# Example for a Python project:
+cd src/
+pip install -e ".[test]"
+pytest tests/ -v
+```
+
+## Project Structure
+
+```
+[PROJECT_NAME]/
+├── CLAUDE.md                     # This file (auto-loaded every session)
+├── Design/                       # Architecture & design docs
+│   ├── index.md                  # Design doc catalog (start here)
+│   ├── golden-principles.md      # Non-negotiable architectural rules (enforced by reviewer)
+│   └── exec-plans/               # Execution plan lifecycle
+│       ├── active/               # In-flight work
+│       └── completed/            # Finished plans
+├── .claude/
+│   ├── agents/                   # Agent role definitions
+│   ├── skills/                   # Design methodology skills
+│   ├── hooks/                    # PostToolUse automation (PR workflow, linters)
+│   └── rules/                    # Path-scoped coding standards (auto-loaded)
+├── src/                          # [REPLACE — your source directories]
+│   ├── contracts/                # Interfaces & shared types (leaf — zero intra-project imports)
+│   ├── engine/                   # Pure business logic (no I/O, no DA calls)
+│   ├── data_access/              # Platform adapters (database, API calls)
+│   ├── manager/                  # Orchestration, workflow (stateless mediators)
+│   ├── utility/                  # Cross-cutting services (logging, audit, sync)
+│   ├── infrastructure/           # DI container, composition roots, provisional mocks
+│   └── [...]
+├── tests/                        # [REPLACE — your test directories]
+│   ├── unit/                     # Pure logic tests
+│   ├── component/                # Tests with test doubles
+│   └── integration/              # Cross-component tests
+└── README.md
+```
+
+## Agent Roles
+
+Defined in `.claude/agents/`. Agents are spawned by the orchestrator (main Claude session) based on task type.
+
+| Agent | Purpose |
+|-------|---------|
+| architect | System design, exec-plans, interface contracts |
+| implementer | Code generation following designs |
+| tester | Test creation, coverage analysis |
+| reviewer | Code review, convention compliance |
+
+## Quick Navigation
+
+| I need to... | Start here | Then read |
+|--------------|-----------|-----------|
+| Design a feature | `Design/index.md` | `Design/golden-principles.md`, architecture docs |
+| Implement code | Active exec-plan in `Design/exec-plans/active/` | `.claude/rules/` for conventions |
+| Write tests | Exec-plan acceptance criteria | `.claude/agents/tester.md` |
+| Review changes | `Design/golden-principles.md` | `.claude/agents/reviewer.md`, `.claude/rules/` |
+
+## Architecture — Tiered Layers
+
+[REPLACE — describe your application's layered architecture. The template below follows IDesign principles. Adjust layer names and rules to match your architecture.]
+
+All components follow tiered layering. **No layer skipping.**
+
+```
+Client → Manager → Engine → Data Access → Resource (external)
+                          ↘ Utility (cross-cutting)
+         Infrastructure (DI, composition root)
+         Contracts (interfaces, types — leaf)
+```
+
+| Layer | Directory | Responsibility | Rules |
+|-------|-----------|---------------|-------|
+| **Client** | (UI project) | UI, user interaction | Presentation only. No business logic. |
+| **Manager** | `manager/` | Orchestration, workflow | Stateless mediators. No business logic. Delegates to engines. |
+| **Engine** | `engine/` | Business logic | Pure functions: `(data, rules) → results`. No I/O. No DA calls. |
+| **Data Access** | `data_access/` | Data retrieval/persistence | Database queries, API calls, file I/O. No business logic. |
+| **Utility** | `utility/` | Cross-cutting services | Logging, audit, sync, notifications. Domain-adjacent, not business logic. |
+| **Infrastructure** | `infrastructure/` | Framework plumbing | DI container, composition roots, provisional mocks. |
+| **Contracts** | `contracts/` | Interfaces & shared types | Protocols, DTOs, error hierarchies. Zero intra-project imports. |
+| **Resource** | (external) | External systems | Databases, APIs, file systems. Not code we write — what DA adapts to. |
+
+### Import Direction (top → bottom only)
+
+```
+manager/        → contracts/, infrastructure/  (resolves deps via DI)
+engine/         → contracts/                   (receives data, returns results)
+data_access/    → contracts/, utility/         (implements DA interfaces, may use helpers)
+utility/        → contracts/                   (implements utility Protocols)
+infrastructure/ → contracts/                   (except composition root, which wires all layers)
+contracts/      → (leaf — zero intra-project imports, only stdlib/third-party)
+```
+
+**Forbidden:** `engine/` → `data_access/`, `data_access/` → `engine/`, `engine/` → `manager/`, any layer → `manager/` (except Client). `contracts/` → anything.
+
+## Agent Coordination
+
+Agents coordinate through **files in the repo**, not shared memory:
+
+| Artifact | Purpose |
+|----------|---------|
+| `CLAUDE.md` | Shared project context (auto-loaded every session) |
+| `Design/` docs | Architect → Tester → Implementer handoff |
+| `Design/exec-plans/` | Task tracking between sessions |
+| `.claude/rules/` | Path-specific coding standards (auto-loaded) |
+| Git commits | Status checkpoints between phases |
+
+### Workflow: PR-Driven (Ralph Wiggum Loop)
+1. Human or architect agent creates exec-plan in `exec-plans/active/`
+2. Tester agent writes failing tests (test-first)
+3. Implementer agent (works in isolated worktree) writes code to make tests pass
+4. Implementer agent self-reviews (quality gate: build, lint, tests)
+5. Implementer agent opens MR/PR via CLI
+6. Hook auto-triggers → reviewer agent reviews diff, posts severity-tagged findings
+7. If Critical findings → implementer auto-fixes → pushes → re-review (loop)
+8. When zero Critical findings → reviewer approves → human final approval
+
+### Orchestrator Delegation Rule
+When acting as the orchestrator (main Claude session), **delegate to the appropriate agent** — do not do the work directly:
+
+| Task type | `subagent_type` | `isolation` |
+|-----------|-----------------|-------------|
+| Code changes, bug fixes | `implementer` | `worktree` |
+| Code review, PR/MR review | `reviewer` | — |
+| Writing tests | `tester` | `worktree` |
+| System design, exec-plans | `architect` | — |
+
+## Domain Glossary
+
+[REPLACE — define domain-specific terms, acronyms, and abbreviations used in this project.]
+
+| Term | Definition |
+|------|-----------|
+| [TERM] | [DEFINITION] |

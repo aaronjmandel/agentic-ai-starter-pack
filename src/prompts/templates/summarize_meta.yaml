@@ -1,7 +1,0 @@
-name: summarize
-description: Summarize a block of text with configurable style and length
-required_variables:
-  - text        # The text to summarize
-optional_variables:
-  - style       # Summary style (default: "concise")
-  - max_points  # Maximum number of key points

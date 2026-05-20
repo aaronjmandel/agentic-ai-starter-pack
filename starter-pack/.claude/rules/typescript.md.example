@@ -1,0 +1,55 @@
+---
+description: "[EXAMPLE] Rules for TypeScript source code — replace with your conventions"
+paths:
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+---
+
+# TypeScript Conventions
+
+[This is an example rules file. Replace the content with conventions observed in your actual codebase. Run Prompt 2 from the starter pack to auto-generate rules from your code.]
+
+## Stack
+- TypeScript 5.x with `strict: true`
+- Node.js 18+, ES2022 target
+- Vitest for testing, tsc for type checking
+
+## Directory Structure (IDesign Layered)
+
+```
+src/
+├── contracts/           # Interfaces, types, DTOs (leaf — zero cross-layer imports)
+├── engine/              # Pure business logic (no I/O, no DA calls)
+├── data_access/         # Platform adapters (database queries, API calls)
+├── utility/             # Cross-cutting helpers
+├── infrastructure/      # DI, composition roots, test doubles
+└── __tests__/
+    ├── unit/            # Pure logic tests
+    └── component/       # Tests with test doubles
+```
+
+## Import Rules
+
+| Layer | May import from |
+|-------|----------------|
+| `contracts/` | Nothing (leaf) |
+| `engine/` | `contracts/` only |
+| `utility/` | `contracts/` only |
+| `data_access/` | `contracts/`, `utility/` |
+| `infrastructure/` | `contracts/` |
+| `__tests__/` | Any layer (test code is exempt) |
+
+## Do
+- Use `import type` for type-only imports
+- Use `interface` for object shapes, `type` for unions/aliases
+- Export through barrel files (`index.ts`) at each layer directory
+- Keep engine functions pure: `(data) → result`, no side effects
+- Use `null` for absent values (not `undefined`)
+- Run `npm run typecheck && npm test` before considering work complete
+
+## Don't
+- Use `any` type — use proper typed interfaces
+- Use `enum` — use union string literal types
+- Co-locate an interface and its implementation in the same file
+- Put business logic in `data_access/`
+- Import from `engine/` or `data_access/` inside `contracts/`

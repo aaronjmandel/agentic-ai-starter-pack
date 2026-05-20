@@ -1,0 +1,50 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if echo \"$file\" | grep -qE '\\.tsx?$'; then cd \"$(git rev-parse --show-toplevel)\" && npx tsc --noEmit --pretty 2>&1 | head -20; fi",
+            "timeout": 30000,
+            "_comment": "[REPLACE] TypeScript type-check on edit. Swap for your compiler: e.g., `cargo check` (Rust), `go build ./...` (Go), `python -m py_compile` (Python), `javac` (Java). Adjust the file extension grep pattern to match your source files."
+          },
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if echo \"$file\" | grep -qE '\\.tsx?$'; then cd \"$(git rev-parse --show-toplevel)\" && npx eslint \"$file\" --no-error-on-unmatched-pattern 2>&1 | head -20; fi",
+            "timeout": 15000,
+            "_comment": "[REPLACE] ESLint on edit. Swap for your linter: e.g., `ruff check` (Python), `golangci-lint run` (Go), `clippy` (Rust). Adjust file extension pattern."
+          },
+          {
+            "type": "command",
+            "command": "file=\"$CLAUDE_FILE_PATH\"; if echo \"$file\" | grep -q 'Design/exec-plans/active/.*\\.md'; then cd \"$(git rev-parse --show-toplevel)\" && echo '[INFO] Exec-plan edited. Run architectural validation if you have a linter configured.'; fi",
+            "timeout": 5000,
+            "_comment": "[OPTIONAL] Placeholder for exec-plan validation. Replace with your own structural linter if you build one (see MDI project for an example: validate-exec-plan-idesign.js)."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/post-mr-create.sh",
+            "timeout": 10000,
+            "statusMessage": "Checking for MR creation..."
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/post-push-mr-check.sh",
+            "timeout": 15000,
+            "statusMessage": "Checking MR comments..."
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); username=$(whoami); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir'); model=$(echo \"$input\" | jq -r '.model.display_name'); session=$(echo \"$input\" | jq -r '.session_name // empty'); ctx_pct=$(echo \"$input\" | jq -r '.context_window.used_percentage // 0' | cut -d. -f1); branch=\"\"; if git -C \"$cwd\" rev-parse --git-dir > /dev/null 2>&1; then branch=$(git -C \"$cwd\" --no-optional-locks symbolic-ref --short HEAD 2>/dev/null || git -C \"$cwd\" --no-optional-locks rev-parse --short HEAD 2>/dev/null); if [ -n \"$branch\" ] && git -C \"$cwd\" --no-optional-locks ls-files --error-unmatch -m --directory --no-empty-directory -o --exclude-standard \":/*\" > /dev/null 2>&1; then branch=\"$branch *\"; fi; fi; printf \"\\033[0;32m@%s \\033[0m> \\033[1;34m%s\" \"$username\" \"$cwd\"; [ -n \"$branch\" ] && printf \" \\033[0;36m(\\033[1;31m%s\\033[0;36m)\\033[0m\" \"$branch\"; [ -n \"$session\" ] && printf \" \\033[0;33m[%s]\\033[0m\" \"$session\"; printf \" \\033[0;35m%s\\033[0m\" \"$model\"; if [ \"$ctx_pct\" -ge 80 ]; then printf \" \\033[0;31m[ctx:%s%%]\\033[0m\" \"$ctx_pct\"; elif [ \"$ctx_pct\" -ge 50 ]; then printf \" \\033[0;33m[ctx:%s%%]\\033[0m\" \"$ctx_pct\"; else printf \" \\033[0;32m[ctx:%s%%]\\033[0m\" \"$ctx_pct\"; fi"
+  }
+}

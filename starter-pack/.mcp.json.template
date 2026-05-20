@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "palantir-mcp": {
+      "type": "stdio",
+      "command": "/usr/local/bin/npx",
+      "args": [
+        "-y",
+        "palantir-mcp",
+        "--foundry-api-url",
+        "https://[REPLACE_FOUNDRY_HOST].palantirfoundry.com",
+        "--foundry-token",
+        "${FOUNDRY_TOKEN}"
+      ],
+      "env": {},
+      "_comment": "[REPLACE] Update --foundry-api-url with your Foundry instance URL. Set FOUNDRY_TOKEN as an ONA/environment secret. palantir-mcp provides full read-write access (44 read + 25 write tools). Disable by default in settings.local.json to save ~50k tokens of context."
+    }
+  }
+}

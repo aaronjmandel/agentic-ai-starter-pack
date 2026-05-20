@@ -1,0 +1,55 @@
+---
+description: "[EXAMPLE] Rules for Python source code — replace with your conventions"
+paths:
+  - "src/**/*.py"
+---
+
+# Python Conventions
+
+[This is an example rules file. Replace the content with conventions observed in your actual codebase. Run Prompt 2 from the starter pack to auto-generate rules from your code.]
+
+## Stack
+- Python 3.11+
+- pytest for testing
+- ruff for linting and formatting
+- pyproject.toml for dependency management
+
+## Directory Structure (IDesign Layered)
+
+```
+src/
+├── contracts/           # Protocols (interfaces), types, DTOs
+├── engine/              # Pure business logic (no I/O)
+├── data_access/         # Database adapters, API clients
+├── utility/             # Cross-cutting helpers
+├── infrastructure/      # DI, composition roots, provisional mocks
+└── tests/
+    ├── unit/            # Pure Python tests (no runtime deps)
+    ├── component/       # Isolated tests with mocks
+    └── integration/     # Cross-component tests
+```
+
+## Import Rules
+
+| Layer | May import from |
+|-------|----------------|
+| `contracts/` | Nothing (leaf — only stdlib/third-party) |
+| `engine/` | `contracts/` only |
+| `utility/` | `contracts/` only |
+| `data_access/` | `contracts/`, `utility/` |
+| `infrastructure/` | `contracts/` |
+| `tests/` | Any layer (test code is exempt) |
+
+## Do
+- Use `Protocol` (from `typing`) for interfaces, not ABCs
+- Use `@dataclass(frozen=True)` for DTOs
+- Use `pyproject.toml` optional dependency groups for test deps
+- Keep engine functions pure: receive data, return results, no side effects
+- Use pytest markers to gate tests by dependency: `@pytest.mark.pure_python`, `@pytest.mark.integration`
+
+## Don't
+- Use `Any` type annotation — use proper types
+- Put business logic in `data_access/`
+- Import from `engine/` or `data_access/` inside `contracts/`
+- Use `requirements.txt` — use `pyproject.toml`
+- Use mutable default arguments
