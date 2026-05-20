@@ -1,21 +1,21 @@
-# AGENTS.md — Agentic AI Starter Pack
+# AGENTS.md — Agentic AI Starter Pack (Claude Native)
 
 ## Project Overview
 
-This is a prototyping starter pack for building agentic AI systems. It provides scaffolding for prompt templates, tool definitions, agent chains, and evaluation harnesses.
+Claude-native prototyping scaffold for agentic AI systems. Uses Anthropic's Messages API with native tool use — no ReAct prompting or OpenAI-style function calling.
 
 ## Repository Structure
 
 ```
 ├── src/
-│   ├── agents/          # Agent definitions and orchestration
-│   ├── tools/           # Tool implementations agents can invoke
-│   ├── prompts/         # Prompt templates (Jinja2 format)
+│   ├── agents/          # Claude-powered agents (ToolUseAgent)
+│   ├── tools/           # Tool implementations with Anthropic input_schema
+│   ├── prompts/         # Jinja2 system prompt templates
 │   ├── chains/          # Multi-step agent chains and workflows
 │   └── evaluation/      # Evaluation and testing utilities
 ├── configs/             # Agent and model configuration files
 ├── examples/            # Runnable example scripts
-├── tests/               # Unit and integration tests
+├── tests/               # Unit and integration tests (mocked API)
 └── docs/                # Architecture and design docs
 ```
 
@@ -28,34 +28,46 @@ This is a prototyping starter pack for building agentic AI systems. It provides 
 - Formatting: `ruff format`
 - Linting: `ruff check`
 
+### Claude API Patterns
+- Use `anthropic.AsyncAnthropic` client — inject via constructor
+- System prompt is a **top-level API parameter**, not a message role
+- Tool definitions use `input_schema` (JSON Schema), not `parameters`
+- The agentic loop checks `stop_reason`: `tool_use` → execute tools → loop; `end_turn` → return
+- Tool results are `tool_result` content blocks in a `user` message
+- Extended thinking is available via `thinking` parameter for complex reasoning
+
 ### Prompts
-- Store prompt templates in `src/prompts/` as `.j2` files
-- Use Jinja2 templating for variable substitution
-- Each prompt file should have a corresponding `_meta.yaml` describing its purpose and required variables
+- Store system prompt templates in `src/prompts/` as `.j2` files
+- Use Jinja2 templating for dynamic context injection
+- Each prompt file should have a corresponding `_meta.yaml`
+- Tool descriptions are handled by the API — don't inject them into prompts
 
 ### Tools
 - Each tool is a single Python module in `src/tools/`
-- Tools must implement the `BaseTool` interface from `src/tools/base.py`
-- Tool docstrings are used as the tool description passed to the LLM — keep them precise
+- Tools must implement `BaseTool` from `src/tools/base.py`
+- Implement `input_schema()` returning JSON Schema for Anthropic's format
+- Use `to_anthropic_schema()` to get the full tool definition for the API
 
 ### Agents
 - Agent configs live in `configs/agents/` as YAML files
-- Agent implementations in `src/agents/` should be stateless where possible
-- Use dependency injection for LLM clients and tool registries
+- `ToolUseAgent` is the primary agent — uses Claude's native tool use loop
+- Inject `AsyncAnthropic` client for testability
+- Agent implementations should be stateless
 
 ### Chains
-- Chains compose agents and tools into multi-step workflows
+- Chains compose agents into multi-step workflows
+- Each step creates its own `ToolUseAgent` with appropriate config
 - Define chains in `src/chains/` with clear input/output contracts
-- Each chain should be independently testable
 
 ### Configuration
-- Model parameters (temperature, max_tokens, etc.) go in `configs/models/`
+- Model parameters go in `configs/models/` (includes `thinking.yaml` for extended thinking)
 - Never hardcode API keys — use environment variables via `.env`
-- Default config values should be sensible for prototyping (e.g., temperature=0.7)
+- Default model: `claude-sonnet-4-20250514`
 
 ### Testing
 - Tests mirror the `src/` structure under `tests/`
-- Use `pytest` with fixtures for LLM mocking
+- Mock `AsyncAnthropic` client — tests run without API keys
+- Use `pytest` with `asyncio_mode = "auto"`
 - Evaluation scripts in `src/evaluation/` for measuring agent quality
 
 ### Git

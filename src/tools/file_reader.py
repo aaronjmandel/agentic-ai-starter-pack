@@ -15,7 +15,19 @@ class FileReaderTool(BaseTool):
 
     @property
     def description(self) -> str:
-        return "Read the contents of a file at the given path. Input: 'path' string."
+        return "Read the contents of a file at the given path."
+
+    def input_schema(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path to the file to read",
+                }
+            },
+            "required": ["path"],
+        }
 
     async def execute(self, **kwargs: Any) -> str:
         file_path = kwargs.get("path", "")
@@ -30,22 +42,9 @@ class FileReaderTool(BaseTool):
 
         try:
             content = path.read_text(encoding="utf-8")
-            # Truncate very large files
             max_chars = 10_000
             if len(content) > max_chars:
                 return content[:max_chars] + f"\n\n... [truncated, {len(content)} total chars]"
             return content
         except Exception as e:
             return f"Error reading file: {e}"
-
-    def _parameters_schema(self) -> dict[str, Any]:
-        return {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "Path to the file to read",
-                }
-            },
-            "required": ["path"],
-        }

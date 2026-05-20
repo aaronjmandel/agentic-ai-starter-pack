@@ -18,7 +18,19 @@ class WebSearchTool(BaseTool):
 
     @property
     def description(self) -> str:
-        return "Search the web for a query. Returns summaries of top results. Input: 'query' string."
+        return "Search the web for a query. Returns summaries of top results."
+
+    def input_schema(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Search query string",
+                }
+            },
+            "required": ["query"],
+        }
 
     async def execute(self, **kwargs: Any) -> str:
         query = kwargs.get("query", "")
@@ -31,15 +43,3 @@ class WebSearchTool(BaseTool):
             "1. Example result — replace this with a real search API integration.\n"
             "   See docs/integrations.md for setup instructions."
         )
-
-    def _parameters_schema(self) -> dict[str, Any]:
-        return {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "Search query string",
-                }
-            },
-            "required": ["query"],
-        }

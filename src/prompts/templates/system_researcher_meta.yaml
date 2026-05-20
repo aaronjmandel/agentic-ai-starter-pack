@@ -1,0 +1,7 @@
+name: system_researcher
+description: System prompt for the research agent. Passed as the `system` parameter to Claude's Messages API.
+required_variables: []
+optional_variables:
+  - domain     # Area of specialization (e.g., "machine learning", "finance")
+  - depth      # Number of key points per topic (default: 3)
+  - audience   # Target audience (e.g., "technical", "executive")

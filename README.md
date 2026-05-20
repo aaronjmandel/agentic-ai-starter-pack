@@ -1,6 +1,6 @@
-# Agentic AI Starter Pack
+# Agentic AI Starter Pack — Claude Native
 
-A prototyping scaffold for building agentic AI systems with LLMs. Provides ready-to-use patterns for agents, tools, prompt templates, multi-step chains, and evaluation.
+A prototyping scaffold for building agentic AI systems with Claude. Uses Anthropic's Messages API with native tool use — no ReAct prompting or function-calling wrappers needed.
 
 ## Quick Start
 
@@ -14,62 +14,89 @@ pip install -e ".[dev]"
 
 # Copy environment template
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env with your ANTHROPIC_API_KEY
 
 # Run the example agent
 python examples/simple_agent.py
 
-# Run the example chain
-python examples/research_chain.py
+# Run with extended thinking
+python examples/thinking_agent.py
+
+# Multi-turn conversation with tools
+python examples/multi_turn_chat.py
+
+# Evaluation demo (no API key needed)
+python examples/evaluation_demo.py
 ```
 
 ## Project Structure
 
 ```
 src/
-├── agents/        Agent definitions and orchestration
-├── tools/         Tool implementations (search, calculator, etc.)
-├── prompts/       Jinja2 prompt templates with metadata
+├── agents/        Claude-powered agents with native tool use
+├── tools/         Tool implementations with Anthropic input_schema
+├── prompts/       Jinja2 system prompt templates
 ├── chains/        Multi-step workflows composing agents + tools
 └── evaluation/    Quality measurement and testing utilities
 
 configs/
-├── agents/        Agent configuration (which model, tools, system prompt)
-└── models/        Model parameter presets (temperature, tokens, etc.)
+├── agents/        Agent configuration (model, tools, system prompt)
+└── models/        Model presets (default, precise, creative, thinking)
 
-examples/          Runnable scripts demonstrating each component
-tests/             Unit and integration tests
+examples/          Runnable scripts demonstrating each pattern
+tests/             Unit and integration tests (with mocked API)
 docs/              Architecture notes and design decisions
 ```
 
 ## Key Concepts
 
-### Agents
-An agent wraps an LLM with a system prompt and a set of tools. See `src/agents/base.py` for the interface and `configs/agents/` for configuration.
+### Claude's Agentic Loop
+The core pattern (see `src/agents/tool_use_agent.py`):
+1. Send messages + tool definitions to Claude
+2. Claude responds with text and/or `tool_use` content blocks
+3. Execute requested tools, return `tool_result` content blocks
+4. Repeat until Claude responds with `end_turn`
+
+No prompt engineering for tool selection — Claude handles it natively.
 
 ### Tools
-Tools are functions the agent can call. Each tool implements `BaseTool` and provides a name, description, and `execute()` method. The description is passed directly to the LLM, so clarity matters.
+Tools implement `BaseTool` with an `input_schema()` method returning JSON Schema. The schema is passed directly to Claude's `tools` parameter. See `src/tools/base.py`.
 
-### Prompts
-Prompt templates use Jinja2 syntax and live in `src/prompts/`. Each template has a companion `_meta.yaml` file listing required variables and usage notes.
+### System Prompts
+Claude takes the system prompt as a top-level API parameter (not a message role). Jinja2 templates in `src/prompts/` compose system prompts with dynamic context.
+
+### Extended Thinking
+Claude can reason internally before responding. Enable via `AgentConfig.thinking`:
+```python
+config = AgentConfig(
+    name="thinker",
+    thinking={"type": "enabled", "budget_tokens": 10000},
+)
+```
 
 ### Chains
-Chains wire multiple agents and tools into a pipeline. Define input/output contracts so each step is independently testable.
+Chains wire multiple agents into a pipeline. Each step uses Claude's native tool use independently.
 
 ### Evaluation
-Use `src/evaluation/` to measure agent output quality. Includes a basic scoring framework and example metrics.
+`src/evaluation/` scores agent outputs against expected results. No API key needed.
 
 ## Configuration
 
-All configuration uses YAML files in `configs/`. Model parameters, agent definitions, and tool registries are separated so you can mix and match.
+Model presets in `configs/models/`:
+- `default.yaml` — balanced (claude-sonnet-4, temp 0.7)
+- `precise.yaml` — deterministic (temp 0)
+- `creative.yaml` — exploratory (temp 1.0)
+- `thinking.yaml` — extended thinking enabled
 
-Environment variables (API keys, endpoints) go in `.env` — never commit secrets.
+API key goes in `.env` — never commit secrets.
 
 ## Testing
 
 ```bash
 pytest tests/ -v
 ```
+
+Tests mock the Anthropic API — no API key needed to run them.
 
 ## License
 

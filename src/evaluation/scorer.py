@@ -84,7 +84,6 @@ def length_ratio(output: str, expected: str) -> float:
     if not expected:
         return 1.0 if not output else 0.0
     ratio = len(output) / len(expected)
-    # Penalize both too short and too long
     if ratio > 1:
         ratio = 1 / ratio
     return max(0.0, ratio)

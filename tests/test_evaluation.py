@@ -51,11 +51,9 @@ class TestScorer:
         scorer.add_metric("exact", exact_match, weight=1.0)
         scorer.add_metric("contains", contains_match, weight=2.0)
 
-        # Exact match fails, contains passes
         result = scorer.score("The answer is Paris", "Paris")
         assert result.metrics["exact"] == 0.0
         assert result.metrics["contains"] == 1.0
-        # Weighted: (0*1 + 1*2) / 3 = 0.667
         assert result.score == pytest.approx(0.667, abs=0.01)
         assert result.passed is True
 
